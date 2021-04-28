@@ -47,10 +47,10 @@ void http_ota_progress_cb( uint8_t progress ) {
 bool http_ota_start( const char* url, const char* md5, int32_t firmwaresize ) {
     bool retval = false;
 
-    if ( ESP.getFreeHeap() <= ( 80*1024 ) ) {
-        http_ota_send_event_cb( HTTP_OTA_ERROR, (void*)"Error ... need more IRAM!" );
-        return( false );
-    }
+    //if ( ESP.getFreeHeap() <= ( 80*1024 ) ) {
+    //    http_ota_send_event_cb( HTTP_OTA_ERROR, (void*)"Error ... need more IRAM!" );
+    //    return( false );
+    //}
     /*
      * disable ble and set esp32 voltage to 3.3V to
      * prevent some issues
@@ -93,6 +93,7 @@ bool http_ota_start_compressed( const char* url, const char* md5, int32_t firmwa
          * start an unpacker instance, reister progress callback and put the stream in
          */
         GzUnpacker *GZUnpacker = new GzUnpacker();
+        GZUnpacker->setPsram(true);        
         GZUnpacker->setGzProgressCallback( http_ota_progress_cb );
         /**
          * if firmware size known set the right value
