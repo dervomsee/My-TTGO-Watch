@@ -31,10 +31,17 @@
 #include "gui/statusbar.h"
 #include "gui/widget_styles.h"
 
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+#include <BLEAddress.h>
+#include <unordered_set>
+
 lv_obj_t *corona_app_detector_main_tile = NULL;
 lv_style_t corona_app_detector_main_style;
-
 lv_task_t * _corona_app_detector_task;
+static uint32_t counter = 0;
 
 LV_IMG_DECLARE(exit_32px);
 LV_IMG_DECLARE(setup_32px);
@@ -45,6 +52,33 @@ static void exit_corona_app_detector_main_event_cb( lv_obj_t * obj, lv_event_t e
 static void enter_corona_app_detector_setup_event_cb( lv_obj_t * obj, lv_event_t event );
 void corona_app_detector_task( lv_task_t * task );
 
+std::map<std::string, unsigned long> seen;
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks
+{
+    void onResult(BLEAdvertisedDevice advertisedDevice) // is called when a ble beacon is found
+    {
+      BLEUUID coronaUUID("FD6F"); 
+      if (advertisedDevice.isAdvertisingService(coronaUUID)) 
+      { 
+        unsigned long now = millis();
+        if( seen.find( advertisedDevice.getAddress().toString()) == seen.end() )
+        {
+            seen.insert( std::make_pair(advertisedDevice.getAddress().toString(), now) );
+        }  
+        for (auto const& x : seen)
+        {
+            if( now  > (1000*60*15 + x.second))
+            { 
+                log_i("erase %s", x.first.c_str()  );
+                seen.erase(x.first);                  
+            }
+        }          
+      }
+    }
+};
+
+BLEScan* pBLEScan ;
+int scanTime = 10; 
 void corona_app_detector_main_setup( uint32_t tile_num ) {
 
     corona_app_detector_main_tile = mainbar_get_tile_obj( tile_num );
@@ -68,6 +102,11 @@ void corona_app_detector_main_setup( uint32_t tile_num ) {
     lv_obj_align(setup_btn, corona_app_detector_main_tile, LV_ALIGN_IN_BOTTOM_RIGHT, -10, -10 );
     lv_obj_set_event_cb( setup_btn, enter_corona_app_detector_setup_event_cb );
 
+    BLEDevice::init("");
+    pBLEScan = BLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    pBLEScan->start(scanTime);
+
     // create an task that runs every secound
     _corona_app_detector_task = lv_task_create( corona_app_detector_task, 1000, LV_TASK_PRIO_MID, NULL );
 }
@@ -88,5 +127,7 @@ static void exit_corona_app_detector_main_event_cb( lv_obj_t * obj, lv_event_t e
 }
 
 void corona_app_detector_task( lv_task_t * task ) {
-    // put your code her
+    
+    counter++;
+    pBLEScan->start(scanTime);
 }

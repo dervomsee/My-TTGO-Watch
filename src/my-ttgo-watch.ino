@@ -42,6 +42,7 @@
 #include "app/FindPhone/FindPhone.h"
 #include "app/gps_status/gps_status.h"
 #include "app/osmmap/osmmap_app.h"
+#include "app/corona_app_detector/corona_app_detector.h"
 
 void setup() {
     /**
@@ -77,6 +78,7 @@ void setup() {
     fxrates_app_setup();
     powermeter_app_setup();
 	FindPhone_setup();
+    corona_app_detector_setup();
     /**
      * post hardware setup
      * 

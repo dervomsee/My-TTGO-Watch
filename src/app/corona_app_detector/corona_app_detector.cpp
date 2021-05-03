@@ -30,6 +30,8 @@
 #include "gui/app.h"
 #include "gui/widget.h"
 
+
+
 uint32_t corona_app_detector_main_tile_num;
 uint32_t corona_app_detector_setup_tile_num;
 
@@ -50,6 +52,8 @@ LV_IMG_DECLARE(info_1_16px);
  * declare callback functions for the app and widget icon to enter the app
  */
 static void enter_corona_app_detector_event_cb( lv_obj_t * obj, lv_event_t event );
+
+
 
 void corona_app_detector_setup( void ) {
     /**
