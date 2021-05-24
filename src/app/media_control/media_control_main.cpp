@@ -1,0 +1,88 @@
+/****************************************************************************
+ *   Aug 3 12:17:11 2020
+ *   Copyright  2020  Dirk Brosswick
+ *   Email: dirk.brosswick@googlemail.com
+ ****************************************************************************/
+ 
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+#include "config.h"
+#include <TTGO.h>
+
+#include "media_control.h"
+#include "media_control_main.h"
+
+#include "gui/mainbar/app_tile/app_tile.h"
+#include "gui/mainbar/main_tile/main_tile.h"
+#include "gui/mainbar/mainbar.h"
+#include "gui/statusbar.h"
+#include "gui/widget_factory.h"
+#include "gui/widget_styles.h"
+
+lv_obj_t *media_control_main_tile = NULL;
+lv_style_t media_control_main_style;
+
+lv_task_t * _media_control_task;
+
+LV_IMG_DECLARE(refresh_32px);
+LV_FONT_DECLARE(Ubuntu_72px);
+
+static void exit_media_control_main_event_cb( lv_obj_t * obj, lv_event_t event );
+static void enter_media_control_setup_event_cb( lv_obj_t * obj, lv_event_t event );
+void media_control_task( lv_task_t * task );
+
+void media_control_main_setup( uint32_t tile_num ) {
+
+    media_control_main_tile = mainbar_get_tile_obj( tile_num );
+    lv_style_copy( &media_control_main_style, ws_get_mainbar_style() );
+
+    lv_obj_t * exit_btn = wf_add_exit_button( media_control_main_tile, exit_media_control_main_event_cb, &media_control_main_style );
+    lv_obj_align(exit_btn, media_control_main_tile, LV_ALIGN_IN_BOTTOM_LEFT, 10, -10 );
+
+    lv_obj_t * setup_btn = wf_add_setup_button( media_control_main_tile, enter_media_control_setup_event_cb, &media_control_main_style );
+    lv_obj_align(setup_btn, media_control_main_tile, LV_ALIGN_IN_BOTTOM_RIGHT, -10, -10 );
+
+    // uncomment the following block of code to remove the "myapp" label in background
+    lv_style_set_text_opa( &media_control_main_style, LV_OBJ_PART_MAIN, LV_OPA_70);
+    lv_style_set_text_font( &media_control_main_style, LV_STATE_DEFAULT, &Ubuntu_72px);
+    lv_obj_t *app_label = lv_label_create( media_control_main_tile, NULL);
+    lv_label_set_text( app_label, "myapp");
+    lv_obj_reset_style_list( app_label, LV_OBJ_PART_MAIN );
+    lv_obj_add_style( app_label, LV_OBJ_PART_MAIN, &media_control_main_style );
+    lv_obj_align( app_label, media_control_main_tile, LV_ALIGN_CENTER, 0, 0);
+
+    // create an task that runs every secound
+    _media_control_task = lv_task_create( media_control_task, 1000, LV_TASK_PRIO_MID, NULL );
+}
+
+static void enter_media_control_setup_event_cb( lv_obj_t * obj, lv_event_t event ) {
+    switch( event ) {
+        case( LV_EVENT_CLICKED ):       statusbar_hide( true );
+                                        mainbar_jump_to_tilenumber( media_control_get_app_setup_tile_num(), LV_ANIM_ON );
+                                        break;
+    }
+}
+
+static void exit_media_control_main_event_cb( lv_obj_t * obj, lv_event_t event ) {
+    switch( event ) {
+        case( LV_EVENT_CLICKED ):       mainbar_jump_to_maintile( LV_ANIM_OFF );
+                                        break;
+    }
+}
+
+void media_control_task( lv_task_t * task ) {
+    // put your code her
+}
